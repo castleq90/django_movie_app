@@ -1,15 +1,13 @@
-from django.http import Http404
 from django.db.models import Q
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import serializers, status
+from rest_framework import status
 
-from .serializers import MovieDetailSerializer, MovieSerializer
-from movies.models import Movie
+from .serializers import MovieDetailSerializer, MovieReviewSerializer, MovieSerializer
+from movies.models import Movie, MovieReview
 
 class MovieList(APIView):
-
     def get(self, request):
         year  = str(request.GET.get('year', None))       # 연도별 필터 기능
         sort  = str(request.GET.get('sort', 'id'))       # 별점 정렬 (sort의 값이 들어오지 않으면 id순서 정렬)
@@ -34,20 +32,41 @@ class MovieList(APIView):
 
         movies     = Movie.objects.filter(q).order_by(sort)[offset:limit]
         serializer = MovieSerializer(movies, many=True)
-
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = MovieSerializer(data=request.data)
         serializer.is_valid()
         serializer.save()
-        return Response(serializer.data,status=status.HTTP_201_CREATED)
-
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class MovieDetail(APIView):
-
     def get(self, request, pk):
-        movie = Movie.objects.get(id=pk)
+        movie      = Movie.objects.get(id=pk)
         serializer = MovieDetailSerializer(movie)
-
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class MovieReviewDetail(APIView):
+    def get(self, request, pk):
+        movie_review = MovieReview.objects.get(id=pk)
+        serializer   = MovieReviewSerializer(movie_review)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def put(self, request, pk):
+        movie_review = MovieReview.objects.get(id=pk)
+        serializer   = MovieReviewSerializer(movie_review, data=request.data)
+        serializer.is_valid()
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, pk):
+        movie_review = MovieReview.objects.get(id=pk)
+        movie_review.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class MovieReviewCreate(APIView):
+    def post(self, request):
+        serializer = MovieReviewSerializer(data=request.data)
+        serializer.is_valid()
+        serializer.save()
+        return Response(serializer.data,status=status.HTTP_201_CREATED)
