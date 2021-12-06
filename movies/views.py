@@ -5,18 +5,16 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import serializers, status
 
-from .serializers import MovieSerializer
+from .serializers import MovieDetailSerializer, MovieSerializer
 from movies.models import Movie
 
 class MovieList(APIView):
 
     def get(self, request):
-
         year  = str(request.GET.get('year', None))       # 연도별 필터 기능
         sort  = str(request.GET.get('sort', 'id'))       # 별점 정렬 (sort의 값이 들어오지 않으면 id순서 정렬)
         title = request.GET.get('title', None)
         page  = int(request.GET.get('page', 1))          # pagination
-
 
         PAGE_SIZE = 10
         limit     = PAGE_SIZE * page
@@ -36,5 +34,20 @@ class MovieList(APIView):
 
         movies     = Movie.objects.filter(q).order_by(sort)[offset:limit]
         serializer = MovieSerializer(movies, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = MovieSerializer(data=request.data)
+        serializer.is_valid()
+        serializer.save()
+        return Response(serializer.data,status=status.HTTP_201_CREATED)
+
+
+class MovieDetail(APIView):
+
+    def get(self, request, pk):
+        movie = Movie.objects.get(id=pk)
+        serializer = MovieDetailSerializer(movie)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
