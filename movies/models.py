@@ -13,7 +13,7 @@ class Movie(models.Model):
         db_table = 'movies'
 
 class MovieReview(models.Model): 
-    movie      = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    movie      = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='reviews')
     text       = models.TextField()
     rating     = models.DecimalField(max_digits=2, decimal_places=1)
     created_at = models.DateTimeField(auto_now_add=True)
